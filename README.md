@@ -511,16 +511,41 @@ aigov-redact audit requests.log --compliance-profile gdpr
 ```
 
 ```python
-from aigov_redact import redact
+from aigov_redact import redact, detect
 
-# GDPR mode — redacts emails, phones, IPs, addresses, DOBs
+text = "Email john@test.com, SSN 123-45-6789, card 4111-1111-1111-1111"
+
+# ── HIPAA: medical focus ──────────────────────────────────────────
+safe = redact(text, compliance_profile="hipaa")  # ← aigov-redact
+# → "Email {EMAIL}, SSN {SSN}, card 4111-1111-1111-1111"
+# Note: CREDIT_CARD is disabled in HIPAA mode, so it passes through
+
+# ── PCI DSS: financial focus, hash placeholders ───────────────────
+safe = redact(text, compliance_profile="pci_dss")  # ← aigov-redact
+# → "Email john@test.com, SSN {SSN}, card <CREDIT_CARD_a1b2c3d4>"
+# Note: EMAIL is disabled, CREDIT_CARD gets hash placeholder
+
+# ── GDPR: personal data focus, NER enabled ────────────────────────
 safe = redact(text, compliance_profile="gdpr")  # ← aigov-redact
+# → "Email {EMAIL}, SSN 123-45-6789, card 4111-1111-1111-1111"
+# Note: SSN and CREDIT_CARD are disabled in GDPR mode
+
+# ── Detect with profile ───────────────────────────────────────────
+result = detect(text, compliance_profile="hipaa")  # ← aigov-redact
+print([e.type for e in result.entities])
+# → ['EMAIL', 'SSN']   (CREDIT_CARD excluded by HIPAA profile)
+
+# ── Override profile from config programmatically ─────────────────
+from aigov_redact.config import load_config
+cfg = load_config(".aigov-redact-config")
+cfg["compliance_profile"] = "pci_dss"
+safe = redact(text, compliance_profile="pci_dss")  # ← aigov-redact
 ```
 
 **How profiles help:**
-- **HIPAA** — only medical-relevant types (SSN, DEA, ICD, DOB). Ignores crypto wallets, IPs — reduces noise
-- **PCI DSS** — focuses on cards + wallets. Hash placeholders let you track duplicates without exposing numbers
-- **GDPR** — covers personal data (email, phone, address, DOB, IP). Enables NER to catch names
+- **HIPAA** — only medical-relevant types (SSN, DEA, ICD, DOB). Ignores crypto wallets, IPs — reduces noise. NER enabled to catch patient names
+- **PCI DSS** — focuses on cards + wallets. Hash placeholders let you track duplicates without exposing numbers. Email and addresses pass through
+- **GDPR** — covers personal data (email, phone, address, DOB, IP). Enables NER to catch names. Financial data passes through
 
 When a profile is active, its settings merge into the top-level config — `enabled` replaces `pii_types.enabled`, `placeholder_style` overrides the default, `ner_enabled` toggles NER, etc. Audit logs also include the profile name so you can prove which compliance mode was active.
 
