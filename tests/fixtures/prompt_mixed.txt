@@ -1,0 +1,6 @@
+What is the capital of France?
+My email is john.doe@gmail.com and my SSN is 123-45-6789.
+Explain quantum computing.
+My credit card number is 4111-1111-1111-1111.
+Write a poem about Python.
+Server IP: 192.168.1.1, API key: sk-abcdefghijklmnopqrstuvwx.

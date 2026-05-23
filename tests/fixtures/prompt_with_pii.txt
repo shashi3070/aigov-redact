@@ -1,0 +1,5 @@
+My email is john.doe@gmail.com and my phone is 555-123-4567.
+My SSN is 123-45-6789, please keep it confidential.
+My credit card is 4111-1111-1111-1111 and I live at 123 Main St.
+The server IP is 192.168.1.1 and my API key is sk-abcdefghijklmnopqrstuvwx.
+My passport number is 123456789 and my DOB is 1990-01-15.

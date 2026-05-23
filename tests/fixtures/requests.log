@@ -1,0 +1,20 @@
+2026-05-23 10:15:30 INFO GET /api/users - user: alice@example.com - status: 200
+2026-05-23 10:15:31 INFO POST /api/login - user: bob@test.com - status: 401
+2026-05-23 10:15:32 WARN User 123-45-6789 failed age check
+2026-05-23 10:15:33 ERROR Crash report from device: IMEI-349012345678901
+2026-05-23 10:15:34 INFO Payment processed: 4111-1111-1111-1111
+2026-05-23 10:15:35 INFO Health check - all systems operational
+2026-05-23 10:15:36 DEBUG Connection from 192.168.1.100:5432
+2026-05-23 10:15:37 INFO User session=abc123def456ghi789 started
+2026-05-23 10:15:38 INFO Reset password for user: jane@company.org
+2026-05-23 10:15:39 WARN Invalid token: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNqPndCYtR8M_xL1IyAqiXBn2QP0
+2026-05-23 10:15:40 INFO New account created with phone +1-555-987-6543
+2026-05-23 10:15:41 INFO RSA key: -----BEGIN RSA PRIVATE KEY-----
+2026-05-23 10:15:42 INFO Updated address: 742 Evergreen Terrace Springfield
+2026-05-23 10:15:43 INFO PAN: ABCPS1234D processed successfully
+2026-05-23 10:15:44 ERROR Aadhaar: 2345 6789 0123 verification failed
+2026-05-23 10:15:45 INFO Medicare: 2123 45678 9 claim submitted
+2026-05-23 10:15:46 INFO UK NINO: AB123456C checked
+2026-05-23 10:15:47 INFO Canada SIN: 123-456-789 verified
+2026-05-23 10:15:48 INFO BCP/CPF: 123.456.789-09 registered
+2026-05-23 10:15:49 INFO China ID: 110105199001011234 validated

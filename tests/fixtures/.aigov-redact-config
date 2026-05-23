@@ -1,0 +1,23 @@
+{
+  "pii_types": {
+    "enabled": null,
+    "disabled": ["IPV4", "IPV6", "MAC_ADDRESS", "LAT_LONG", "ZIP_CODE"]
+  },
+  "custom_patterns": [
+    {
+      "name": "EMP_ID",
+      "description": "Internal employee ID",
+      "pattern": "EMP-\\d{6}",
+      "confidence": 0.95,
+      "placeholder": "{EMP_ID}",
+      "severity": "high"
+    }
+  ],
+  "allowlist": [],
+  "excluded_patterns": ["example\\.com"],
+  "placeholder_style": "type",
+  "mask_char": "*",
+  "ner_enabled": false,
+  "backup": true,
+  "audit_log": "redactai-audit.log"
+}
