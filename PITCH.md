@@ -55,6 +55,19 @@ response = openai.chat.completions.create(
 | **CLI + Library** | `aigov-redact check file.txt` — drop-in CI/CD gate | Library-only |
 | **Dependencies** | Pure Python. Zero heavy deps. <1ms per prompt. | Often require spaCy, ML models, or cloud SDKs |
 
+### Feature Highlights
+
+- **Redact** — 5 modes (replace/mask/hash/remove/custom), 50+ patterns across 4 confidence tiers, one-liner integration: `redact(prompt).text`
+- **Governance** — every library call auto-logs to dual `history.jsonl` paths (user + project); SHA-256 hashed evidence for SOC 2 / HIPAA / GDPR auditors
+- **Customization** — custom regex patterns, excluded patterns, placeholder style, mask char, `history_path` override; YAML/JSON/TOML config with auto-discovery
+- **Built-in compliance** — HIPAA, PCI DSS, GDPR profiles toggle `enabled`/`disabled` types, NER, mask style in one config key; audit logs record which profile was active
+- **Audit logging** — `audit` command scans log files line-by-line, writes CSV with timestamp, file, line, col, type, SHA-256 hash, confidence, severity
+- **PII scanning** — `check` (detect-only with JSON/table output, exits 1 on PII), `audit` (production log forensics), both support `--stdin` piping
+- **Usage history** — `history` command shows aggregated stats and recent runs deduplicating across user-global and project-local JSONL stores
+- **Optional NER** — `aigov-redact[ner]` enables Presidio-based name/location/org detection merged with regex results
+- **Zero heavy deps** — core uses only stdlib `re`, Pydantic v2, and typer; Presidio and PyYAML are optional extras
+- **CI/CD ready** — `aigov-redact check --json` exits 1 if PII found; pipe stdin for pre-commit hooks
+
 ---
 
 ## Quick Demo
