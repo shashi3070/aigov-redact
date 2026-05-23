@@ -84,16 +84,18 @@ def check(
 
     opts = _detector_options(cfg)
 
+    history_path = cfg.get("history_path")
+
     if stdin:
         text = _read_stdin()
-        result = detect_lib(text, ner_enabled=ner, **opts)
+        result = detect_lib(text, ner_enabled=ner, history_path=history_path, **opts)
     elif file:
         filepath = Path(file)
         if not filepath.exists():
             typer.echo(f"Error: file not found: {file}", err=True)
             raise typer.Exit(1)
         text = filepath.read_text("utf-8", errors="replace")
-        result = detect_lib(text, ner_enabled=ner, **opts)
+        result = detect_lib(text, ner_enabled=ner, history_path=history_path, **opts)
     else:
         typer.echo("Error: provide a file or use --stdin", err=True)
         raise typer.Exit(1)
@@ -152,6 +154,7 @@ def redact(
     mode = cfg.get("mode", "replace")
     placeholder_style = cfg.get("placeholder_style", "type")
     mask_char = cfg.get("mask_char", "*")
+    history_path = cfg.get("history_path")
 
     if stdin:
         text = _read_stdin()
@@ -161,6 +164,7 @@ def redact(
             ner_enabled=ner,
             mask_char=mask_char,
             placeholder_style=placeholder_style,
+            history_path=history_path,
             **opts,
         )
         if stdout:
@@ -185,6 +189,7 @@ def redact(
         ner_enabled=ner,
         mask_char=mask_char,
         placeholder_style=placeholder_style,
+        history_path=history_path,
         **opts,
     )
 
@@ -259,9 +264,11 @@ def audit(
 @app.command()
 def history(
     limit: int = typer.Option(50, "--limit", "-n", help="Number of recent records to show"),
+    config: Optional[str] = typer.Option(None, "--config", "-c", help="Path to config file"),
 ):
     """Show usage history."""
-    records = get_history(limit=limit)
+    cfg = _resolve_config(config)
+    records = get_history(limit=limit, history_path=cfg.get("history_path"))
     if not records:
         typer.echo("No usage history recorded yet.")
         raise typer.Exit(0)

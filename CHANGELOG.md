@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.3 (2026-05-23)
+
+- History written to both `~/.aigov-redact/history.jsonl` and `./.aigov-redact/history.jsonl`
+- New `history_path` config option and library parameter for custom history location
+- Fixed CLI app name still showing `prompt-sanitizer` instead of `aigov-redact`
+- Fixed `.gitignore` and test fixture with old name references
+
 ## v0.1.2 (2026-05-23)
 
 - Fixed history path still pointing to old `.prompt-sanitizer` folder instead of `.aigov-redact`

@@ -10,4 +10,4 @@ build/
 .env
 *.egg
 *.bak
-prompt-sanitizer-audit.log
+aigov-redact-audit.log

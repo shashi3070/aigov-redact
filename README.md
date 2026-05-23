@@ -131,15 +131,23 @@ aigov-redact check prompt.txt --config .aigov-redact-config
 
 ### Usage History
 
-Every call — whether from the Python library or the CLI — is automatically logged to `~/.aigov-redact/history.jsonl`. No setup needed.
+Every call — whether from the Python library or the CLI — is automatically logged. No setup needed.
+
+**Where history is stored:**
+- `~/.aigov-redact/history.jsonl` — user home directory (always)
+- `./.aigov-redact/history.jsonl` — current working directory (always)
+- Custom path via `history_path` config key or `history_path` parameter
 
 ```python
 from aigov_redact import redact, detect  # ← aigov-redact
 
-# These are auto-logged to ~/.aigov-redact/history.jsonl
+# These are auto-logged to ~/.aigov-redact/history.jsonl AND ./.aigov-redact/history.jsonl
 redact("Email: user@test.com")       # ← aigov-redact  (logged as "redact")
 detect("SSN: 123-45-6789")           # ← aigov-redact  (logged as "check")
 mask("Phone: 555-123-4567")          # ← aigov-redact  (logged as "redact" with mode=mask)
+
+# Or use a custom history path
+detect("test@email.com", history_path="/path/to/custom.jsonl")  # ← aigov-redact
 ```
 
 ```bash
@@ -148,6 +156,9 @@ aigov-redact history
 
 # Show last 10 runs
 aigov-redact history --limit 10
+
+# Use custom history path from config
+aigov-redact history --config .aigov-redact-config
 ```
 
 Example output:
@@ -455,7 +466,8 @@ aigov-redact supports a `.aigov-redact-config` file (auto-discovered from the cu
   "mask_char": "*",
   "ner_enabled": false,
   "backup": true,
-  "audit_log": "aigov-redact-audit.log"
+  "audit_log": "aigov-redact-audit.log",
+  "history_path": "/custom/path/history.jsonl"
 }
 ```
 

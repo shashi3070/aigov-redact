@@ -19,5 +19,5 @@
   "mask_char": "*",
   "ner_enabled": false,
   "backup": true,
-  "audit_log": "redactai-audit.log"
+  "audit_log": "aigov-redact-audit.log"
 }
