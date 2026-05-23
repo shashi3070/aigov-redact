@@ -3,7 +3,7 @@
 **Governance-ready PII redaction for AI/GenAI.** A lightweight, local-first Python library and CLI tool for detecting, redacting, and auditing personally identifiable information (PII) before it reaches LLM APIs. Built for compliance, auditability, and zero-trust data privacy.
 
 ```python
-from aigov-redact import redact, detect  # ← redactai
+from aigov_redact import redact, detect  # ← aigov-redact
 
 # ── Before every LLM API call: redact, then prove it to auditors ────
 prompt = f"""
@@ -12,14 +12,14 @@ Question: What benefits am I eligible for?
 """
 
 # 1. Check what would be exposed
-result = detect(prompt)  # ← redactai
+result = detect(prompt)  # ← aigov-redact
 for e in result.entities:
     print(f"  {e.type} at [{e.start}:{e.end}] (confidence: {e.confidence:.2f})")
 # → EMAIL at [45:57] (confidence: 0.95)
 # → SSN at [63:74] (confidence: 0.98)
 
 # 2. Redact before sending to OpenAI / Claude / Gemini
-safe = redact(prompt, mode="replace")  # ← redactai
+safe = redact(prompt, mode="replace")  # ← aigov-redact
 print(safe.text)
 # → "User context: My name is {EMAIL}, email {EMAIL}, SSN {SSN}
 #     Question: What benefits am I eligible for?"
@@ -47,7 +47,7 @@ Data privacy is the #1 enterprise concern for LLM adoption. When you send prompt
 | **Medical data in summarization** | "Patient Jane Doe, ICD-10: F32.9" | HIPAA violation |
 | **Governance gap** | "No audit trail of what PII was sent to LLMs" | SOC 2 / ISO 27001 failure |
 
-**redactai** sits between your application and the LLM — a privacy firewall that strips PII before it reaches the API.
+**aigov-redact** sits between your application and the LLM — a privacy firewall that strips PII before it reaches the API.
 
 - **Governance-ready** — Every redaction is auditable. Prove to regulators that PII never reached the LLM.
 - **Local-first** — No data leaves your machine. No API calls. No telemetry. Zero trust.
@@ -60,7 +60,7 @@ Data privacy is the #1 enterprise concern for LLM adoption. When you send prompt
 ### Installation
 
 ```bash
-pip install redactai
+pip install aigov-redact
 ```
 
 With optional NER support (names, locations, organizations):
@@ -73,33 +73,33 @@ python -m spacy download en_core_web_sm
 ### Python Library — LLM-First Examples
 
 ```python
-from aigov-redact import redact, detect, mask  # ← redactai
+from aigov_redact import redact, detect, mask  # ← aigov-redact
 
 # ── Before sending to OpenAI / Claude / Gemini ──────────────────────
 prompt = "My email is john@gmail.com and SSN is 123-45-6789"
-safe_prompt = redact(prompt).text  # ← redactai
+safe_prompt = redact(prompt).text  # ← aigov-redact
 # → "My email is {EMAIL} and SSN is {SSN}"
 
 # Now safe to send: response = openai.chat.completions.create(...)
 
 # ── Detect what PII would be exposed before deciding ────────────────
-result = detect("My SSN is 123-45-6789")  # ← redactai
+result = detect("My SSN is 123-45-6789")  # ← aigov-redact
 for entity in result.entities:
     print(f"{entity.type} at pos {entity.start}-{entity.end}: {entity.confidence}")
 # → SSN at pos 7-18: 0.98
 
 # ── Mask PII (no original shape visible) ───────────────────────────
-result = mask("SSN: 123-45-6789", char="*")  # ← redactai
+result = mask("SSN: 123-45-6789", char="*")  # ← aigov-redact
 print(result.text)
 # → "SSN: ***********"
 
 # ── Hash for deterministic tracking across turns ────────────────────
-result = redact("Email: user@test.com", mode="hash")  # ← redactai
+result = redact("Email: user@test.com", mode="hash")  # ← aigov-redact
 print(result.text)
 # → "Email: <EMAIL_a1b2c3d4>"
 
 # ── Remove entirely ─────────────────────────────────────────────────
-result = redact("Email: user@test.com", mode="remove")  # ← redactai
+result = redact("Email: user@test.com", mode="remove")  # ← aigov-redact
 print(result.text)
 # → "Email: "
 ```
@@ -134,7 +134,7 @@ aigov-redact check prompt.txt --config .aigov-redact-config
 Every call — whether from the Python library or the CLI — is automatically logged to `~/.aigov-redact/history.jsonl`. No setup needed.
 
 ```python
-from aigov-redact import redact, detect  # ← redactai
+from aigov_redact import redact, detect  # ← aigov-redact
 
 # These are auto-logged to ~/.aigov-redact/history.jsonl
 redact("Email: user@test.com")       # ← aigov-redact  (logged as "redact")
@@ -177,13 +177,13 @@ Recent runs:
 
 ```python
 from openai import OpenAI
-from aigov-redact import redact  # ← redactai
+from aigov_redact import redact  # ← aigov-redact
 
 client = OpenAI()
 
 def safe_completion(prompt: str, **kwargs):
     """Redact PII before sending to OpenAI, return redacted + response."""
-    result = redact(prompt)  # ← redactai
+    result = redact(prompt)  # ← aigov-redact
     response = client.chat.completions.create(
         messages=[{"role": "user", "content": result.text}],
         **kwargs
@@ -201,7 +201,7 @@ print(response)      # LLM response (never saw the real SSN)
 ### 2. AI Governance & Audit Trail — Prove Compliance
 
 ```python
-from aigov-redact import redact  # ← redactai
+from aigov_redact import redact  # ← aigov-redact
 import json
 from datetime import datetime, timezone
 
@@ -214,7 +214,7 @@ class GovernedLLMClient:
 
     def send(self, prompt: str, llm_callable):
         """Redact PII, log audit entry, then call the LLM."""
-        result = redact(prompt)  # ← redactai
+        result = redact(prompt)  # ← aigov-redact
 
         # ── Governance: record every PII entity for compliance ──────
 for entity in result.entities:
@@ -250,7 +250,7 @@ For SOC 2 / ISO 27001 auditors: export your governance log and demonstrate that 
 
 ```python
 import anthropic
-from aigov-redact import redact  # ← redactai
+from aigov_redact import redact  # ← aigov-redact
 
 client = anthropic.Anthropic()
 
@@ -268,7 +268,7 @@ message = client.messages.create(
 ### 4. RAG Pipeline — Redact Before Embedding
 
 ```python
-from aigov-redact import redact  # ← redactai
+from aigov_redact import redact  # ← aigov-redact
 
 class SafeRAGPipeline:
     def __init__(self, embedder, vector_store):
@@ -276,12 +276,12 @@ class SafeRAGPipeline:
         self.vector_store = vector_store
 
     def ingest(self, documents: list[str]):
-        safe_docs = [redact(doc, mode="replace").text for doc in documents]  # ← redactai
+        safe_docs = [redact(doc, mode="replace").text for doc in documents]  # ← aigov-redact
         embeddings = self.embedder.embed_documents(safe_docs)
         self.vector_store.add(embeddings, safe_docs)
 
     def query(self, question: str) -> str:
-        safe_q = redact(question).text  # ← redactai
+        safe_q = redact(question).text  # ← aigov-redact
         results = self.vector_store.similarity_search(safe_q)
         return " ".join(results)
 
@@ -294,13 +294,13 @@ pipeline.ingest(["John Doe's email is john@acme.com, balance $50k"])
 
 ```python
 from langchain_core.messages import HumanMessage
-from aigov-redact import redact  # ← redactai
+from aigov_redact import redact  # ← aigov-redact
 
 def redact_messages(messages):
     """Redact PII from all human messages in a LangChain chain."""
     for msg in messages:
         if isinstance(msg, HumanMessage):
-            result = redact(msg.content)  # ← redactai
+            result = redact(msg.content)  # ← aigov-redact
             msg.content = result.text
     return messages
 
@@ -313,11 +313,11 @@ safe_messages = redact_messages(messages)
 ### 6. Streaming — Redact Before Tokenization
 
 ```python
-from aigov-redact import redact  # ← redactai
+from aigov_redact import redact  # ← aigov-redact
 
 def stream_safe(prompt: str, llm_stream):
     """Redact prompt, stream LLM response."""
-    safe = redact(prompt).text  # ← redactai
+    safe = redact(prompt).text  # ← aigov-redact
     yield from llm_stream(safe)
 
 # for chunk in stream_safe("My SSN is 123-45-6789", openai_stream):
@@ -327,14 +327,14 @@ def stream_safe(prompt: str, llm_stream):
 ### 7. Batch Dataset Preparation for Fine-Tuning
 
 ```python
-from aigov-redact import redact  # ← redactai
+from aigov_redact import redact  # ← aigov-redact
 import json
 
 with open("training_data.jsonl") as f, open("safe_training_data.jsonl", "w") as out:
     for line in f:
         record = json.loads(line)
-        record["prompt"] = redact(record["prompt"]).text  # ← redactai
-        record["completion"] = redact(record["completion"]).text  # ← redactai
+        record["prompt"] = redact(record["prompt"]).text  # ← aigov-redact
+        record["completion"] = redact(record["completion"]).text  # ← aigov-redact
         out.write(json.dumps(record) + "\n")
 ```
 
@@ -593,10 +593,10 @@ python -m spacy download en_core_web_sm
 ```
 
 ```python
-from aigov-redact import redact  # ← redactai
+from aigov_redact import redact  # ← aigov-redact
 
 # NER catches PERSON, LOCATION, ORGANIZATION
-result = redact("John Smith lives in New York and works at Acme Corp.", ner_enabled=True)  # ← redactai
+result = redact("John Smith lives in New York and works at Acme Corp.", ner_enabled=True)  # ← aigov-redact
 print(result.text)
 # → "{PERSON} lives in {LOCATION} and works at {ORGANIZATION}."
 ```
@@ -659,7 +659,7 @@ Shortcut for `redact(text, mode="mask", mask_char=char, ...)`.
 ### 1. LLM Prompt Sanitization (OpenAI / Claude / Gemini / Local)
 
 ```python
-from aigov-redact import redact  # ← redactai
+from aigov_redact import redact  # ← aigov-redact
 
 # Before sending ANY prompt to an LLM, redact PII
 prompt = f"""User context:
@@ -670,7 +670,7 @@ Insurance: 123-45-6789
 
 Question: What is my coverage limit?"""
 
-safe = redact(prompt, mode="replace")  # ← redactai
+safe = redact(prompt, mode="replace")  # ← aigov-redact
 print(safe.text)
 # → "User context:
 #     Name: {EMAIL}
@@ -688,7 +688,7 @@ print(safe.text)
 ### 2. AI Governance & Audit Trail — SOC 2 / ISO 27001 Evidence
 
 ```python
-from aigov-redact import redact, detect  # ← redactai
+from aigov_redact import redact, detect  # ← aigov-redact
 import json, csv
 from datetime import datetime, timezone
 
@@ -701,9 +701,9 @@ prompts = [
 governance_log = []
 for i, prompt in enumerate(prompts):
     # 1. Detect what PII is present
-    result = detect(prompt)  # ← redactai
+    result = detect(prompt)  # ← aigov-redact
     # 2. Redact before LLM call
-    safe = redact(prompt)  # ← redactai
+    safe = redact(prompt)  # ← aigov-redact
     # 3. Log every entity for compliance evidence
     for e in result.entities:
         governance_log.append({
@@ -736,19 +736,19 @@ Show them this file as proof that every PII entity was detected and redacted bef
 ### 3. API Key Detection — Prevent Credential Leak to LLMs
 
 ```python
-from aigov-redact import redact, detect  # ← redactai
+from aigov_redact import redact, detect  # ← aigov-redact
 
 # Developers accidentally paste API keys into prompts. Catch them.
 code_prompt = """Why does my API key fail?
 sk-abc123def456ghi789jklmno"""
 
-result = detect(code_prompt)  # ← redactai
+result = detect(code_prompt)  # ← aigov-redact
 for e in result.entities:
     if e.type == "API_KEY":
         print(f"WARNING: API key detected! ({e.confidence})")
         # → WARNING: API key detected! (0.95)
 
-safe = redact(code_prompt)  # ← redactai
+safe = redact(code_prompt)  # ← aigov-redact
 print(safe.text)
 # → "Why does my API key fail?
 #     {API_KEY}"
@@ -765,7 +765,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: pip install redactai
+      - run: pip install aigov-redact
       - name: Scan logs for PII before deploying LLM app
         run: |
           aigov-redact audit logs/production.log --fail-on-pii --format json
@@ -791,27 +791,27 @@ aigov-redact audit requests.log --audit-log pii-leaks.csv
 ### 6. LLM Training Data Sanitization
 
 ```python
-from aigov-redact import redact  # ← redactai
+from aigov_redact import redact  # ← aigov-redact
 import json
 
 # Sanitize entire fine-tuning datasets before training
 with open("train.jsonl") as f, open("train_clean.jsonl", "w") as out:
     for line in f:
         record = json.loads(line)
-        record["prompt"] = redact(record["prompt"]).text  # ← redactai
-        record["completion"] = redact(record["completion"]).text  # ← redactai
+        record["prompt"] = redact(record["prompt"]).text  # ← aigov-redact
+        record["completion"] = redact(record["completion"]).text  # ← aigov-redact
         out.write(json.dumps(record) + "\n")
 ```
 
 ### 7. Custom PII Detection for Internal Tools
 
 ```python
-from aigov-redact import redact  # ← redactai
-from aigov_redact.patterns import PIIDefinition  # ← redactai
+from aigov_redact import redact  # ← aigov-redact
+from aigov_redact.patterns import PIIDefinition  # ← aigov-redact
 import re
 
 # Add your company's internal identifiers
-employee_id = PIIDefinition(  # ← redactai
+employee_id = PIIDefinition(  # ← aigov-redact
     name="EMP_ID",
     regex=re.compile(r"EMP-\d{6}"),
     confidence=0.95,
@@ -819,7 +819,7 @@ employee_id = PIIDefinition(  # ← redactai
     placeholder="{EMP_ID}",
 )
 
-result = redact("Employee EMP-123456 reported an issue", custom_patterns=[employee_id])  # ← redactai
+result = redact("Employee EMP-123456 reported an issue", custom_patterns=[employee_id])  # ← aigov-redact
 print(result.text)
 # → "Employee {EMP_ID} reported an issue"
 ```
@@ -827,14 +827,14 @@ print(result.text)
 ### 8. Multi-Turn Conversation — Consistent Redaction
 
 ```python
-from aigov-redact import redact  # ← redactai
+from aigov_redact import redact  # ← aigov-redact
 
 class SafeConversation:
     def __init__(self):
         self.history = []
 
     def add_message(self, role: str, content: str):
-        safe = redact(content, mode="hash")  # ← redactai
+        safe = redact(content, mode="hash")  # ← aigov-redact
         self.history.append({"role": role, "content": safe.text})
 
     def get_context(self) -> list[dict]:
@@ -851,7 +851,7 @@ chat.add_message("user", "Actually it's jane@new.com")
 ### 9. Healthcare LLM — HIPAA Compliance
 
 ```python
-from aigov-redact import redact  # ← redactai
+from aigov_redact import redact  # ← aigov-redact
 
 hipaa_prompt = """Patient: John Smith
 MRN: MRN-12345
@@ -859,7 +859,7 @@ DOB: 1985-07-20
 ICD-10: I10 (hypertension), E11.9 (type 2 diabetes)
 Phone: 555-123-4567"""
 
-safe = redact(hipaa_prompt)  # ← redactai
+safe = redact(hipaa_prompt)  # ← aigov-redact
 print(safe.text)
 # → "Patient: {EMAIL}   ← Actually detected by NER if enabled
 #     DOB: {DOB}
@@ -872,13 +872,13 @@ print(safe.text)
 
 ```python
 # Drop-in guard for any LangChain chain
-from aigov-redact import redact  # ← redactai
+from aigov_redact import redact  # ← aigov-redact
 from langchain_core.messages import HumanMessage, AIMessage
 
 def guard_llm_input(messages):
     for m in messages:
         if isinstance(m, HumanMessage):
-            result = redact(m.content)  # ← redactai
+            result = redact(m.content)  # ← aigov-redact
             m.content = result.text
     return messages
 
@@ -891,15 +891,15 @@ def guard_llm_input(messages):
 ### Setup
 
 ```bash
-git clone https://github.com/your-username/redactai
-cd redactai
+git clone https://github.com/shashi3070/aigov-redact
+cd aigov-redact
 pip install -e ".[dev]"
 ```
 
 ### Test
 
 ```bash
-pytest tests/ -v --cov=src/redactai
+pytest tests/ -v --cov=src/aigov_redact
 ```
 
 ### Lint
