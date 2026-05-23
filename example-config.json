@@ -1,0 +1,55 @@
+{
+  "pii_types": {
+    "enabled": null,
+    "disabled": ["IPV4", "IPV6", "MAC_ADDRESS", "LAT_LONG", "ZIP_CODE"]
+  },
+  "custom_patterns": [
+    {
+      "name": "EMP_ID",
+      "description": "Internal employee ID",
+      "pattern": "EMP-\\d{6}",
+      "confidence": 0.95,
+      "placeholder": "{EMP_ID}",
+      "severity": "high"
+    }
+  ],
+  "allowlist": [],
+  "excluded_patterns": ["example\\.com", "mycompany\\.org"],
+  "placeholder_style": "type",
+  "mask_char": "*",
+  "ner_enabled": false,
+  "backup": true,
+  "audit_log": "aigov-redact-audit.log",
+  "history_path": null,
+  "compliance_profile": "hipaa",
+  "compliance_profiles": {
+    "hipaa": {
+      "enabled": ["SSN", "PHONE_US", "PHONE_INTL", "EMAIL", "DEA_NUMBER", "MEDICAL_RECORD", "ICD_CODE", "DATE_OF_BIRTH", "UK_NHS", "US_PASSPORT", "DRIVERS_LICENSE"],
+      "disabled": ["CREDIT_CARD", "CRYPTO_WALLET", "IPV4", "IPV6", "LAT_LONG", "ZIP_CODE"],
+      "placeholder_style": "type",
+      "ner_enabled": true,
+      "mask_char": "*"
+    },
+    "pci_dss": {
+      "enabled": ["CREDIT_CARD", "CRYPTO_WALLET", "SSN", "ITIN", "EIN", "BANK_ACCOUNT", "ROUTING_NUMBER"],
+      "disabled": ["IPV4", "IPV6", "LAT_LONG", "STREET_ADDRESS", "DATE_OF_BIRTH", "ICD_CODE", "MEDICAL_RECORD"],
+      "placeholder_style": "hash",
+      "ner_enabled": false,
+      "mask_char": "*"
+    },
+    "gdpr": {
+      "enabled": ["EMAIL", "PHONE_US", "PHONE_INTL", "IPV4", "STREET_ADDRESS", "DATE_OF_BIRTH", "USERNAME", "LAT_LONG", "DEVICE_ID"],
+      "disabled": ["SSN", "CREDIT_CARD", "DEA_NUMBER", "ICD_CODE", "MEDICAL_RECORD"],
+      "placeholder_style": "type",
+      "ner_enabled": true,
+      "mask_char": "*"
+    },
+    "custom_internal": {
+      "enabled": ["EMAIL", "EMP_ID", "API_KEY", "URL_CREDENTIALS", "JWT_TOKEN"],
+      "disabled": null,
+      "placeholder_style": "redact",
+      "ner_enabled": false,
+      "mask_char": "#"
+    }
+  }
+}

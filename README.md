@@ -138,12 +138,14 @@ Every call — whether from the Python library or the CLI — is automatically l
 - `./.aigov-redact/history.jsonl` — current working directory (always)
 - Custom path via `history_path` config key or `history_path` parameter
 
+Each record includes `source` (`"library"`, `"cli"`, or `"stdin"`) and `file_path` so you can distinguish how calls were made.
+
 ```python
 from aigov_redact import redact, detect  # ← aigov-redact
 
 # These are auto-logged to ~/.aigov-redact/history.jsonl AND ./.aigov-redact/history.jsonl
-redact("Email: user@test.com")       # ← aigov-redact  (logged as "redact")
-detect("SSN: 123-45-6789")           # ← aigov-redact  (logged as "check")
+redact("Email: user@test.com")       # ← aigov-redact  (logged as "redact", source="library")
+detect("SSN: 123-45-6789")           # ← aigov-redact  (logged as "check", source="library")
 mask("Phone: 555-123-4567")          # ← aigov-redact  (logged as "redact" with mode=mask)
 
 # Or use a custom history path
@@ -178,8 +180,8 @@ Entity types detected (top):
 
 Recent runs:
   2026-05-23T10:15:30  check    stdin  count=0  []
-  2026-05-23T10:16:00  redact   file   count=2  [EMAIL, SSN]
-  2026-05-23T10:17:00  audit    file   count=5  [EMAIL, SSN, PHONE, API_KEY]
+  2026-05-23T10:16:00  redact   cli    count=2  [EMAIL, SSN]
+  2026-05-23T10:17:00  audit    cli    count=5  [EMAIL, SSN, PHONE, API_KEY]
 ```
 
 ## LLM Integration Patterns
@@ -460,8 +462,8 @@ aigov-redact supports a `.aigov-redact-config` file (auto-discovered from the cu
       "severity": "high"
     }
   ],
-  "allowlist": ["support@mycompany.com"],
-  "excluded_patterns": ["example\\.com"],
+  "allowlist": [],
+  "excluded_patterns": ["example\\.com", "mycompany\\.org"],
   "placeholder_style": "type",
   "mask_char": "*",
   "ner_enabled": false,
@@ -473,20 +475,26 @@ aigov-redact supports a `.aigov-redact-config` file (auto-discovered from the cu
 
 ### Compliance Profiles
 
-Define named profiles in your config that override top-level settings:
+Define named profiles in your config that override top-level settings. Profile keys (`enabled`, `disabled`, `placeholder_style`, `ner_enabled`, `mask_char`) override the matching top-level keys when the profile is active.
 
 ```json
 {
   "compliance_profiles": {
     "hipaa": {
-      "enabled": ["SSN", "PHONE", "EMAIL", "DEA_NUMBER", "MEDICAL_RECORD", "ICD_CODE"]
+      "enabled": ["SSN", "PHONE_US", "PHONE_INTL", "EMAIL", "DEA_NUMBER", "MEDICAL_RECORD", "ICD_CODE", "DATE_OF_BIRTH", "UK_NHS"],
+      "disabled": ["CREDIT_CARD", "CRYPTO_WALLET", "IPV4", "IPV6", "LAT_LONG", "ZIP_CODE"],
+      "placeholder_style": "type",
+      "ner_enabled": true,
+      "mask_char": "*"
     },
     "pci_dss": {
-      "enabled": ["CREDIT_CARD", "CRYPTO_WALLET"],
-      "placeholder_style": "hash"
+      "enabled": ["CREDIT_CARD", "CRYPTO_WALLET", "SSN", "ITIN", "EIN", "BANK_ACCOUNT", "ROUTING_NUMBER"],
+      "placeholder_style": "hash",
+      "ner_enabled": false
     },
     "gdpr": {
-      "enabled": ["EMAIL", "PHONE", "IPV4", "STREET_ADDRESS", "DATE_OF_BIRTH"],
+      "enabled": ["EMAIL", "PHONE_US", "PHONE_INTL", "IPV4", "STREET_ADDRESS", "DATE_OF_BIRTH", "USERNAME", "LAT_LONG", "DEVICE_ID"],
+      "disabled": ["SSN", "CREDIT_CARD", "DEA_NUMBER", "ICD_CODE", "MEDICAL_RECORD"],
       "ner_enabled": true
     }
   },
@@ -502,7 +510,19 @@ aigov-redact redact file.txt --compliance-profile pci_dss
 aigov-redact audit requests.log --compliance-profile gdpr
 ```
 
-When a profile is active, its settings merge into the top-level config — `enabled` replaces `pii_types.enabled`, `placeholder_style` overrides the default, `ner_enabled` toggles NER, etc.
+```python
+from aigov_redact import redact
+
+# GDPR mode — redacts emails, phones, IPs, addresses, DOBs
+safe = redact(text, compliance_profile="gdpr")  # ← aigov-redact
+```
+
+**How profiles help:**
+- **HIPAA** — only medical-relevant types (SSN, DEA, ICD, DOB). Ignores crypto wallets, IPs — reduces noise
+- **PCI DSS** — focuses on cards + wallets. Hash placeholders let you track duplicates without exposing numbers
+- **GDPR** — covers personal data (email, phone, address, DOB, IP). Enables NER to catch names
+
+When a profile is active, its settings merge into the top-level config — `enabled` replaces `pii_types.enabled`, `placeholder_style` overrides the default, `ner_enabled` toggles NER, etc. Audit logs also include the profile name so you can prove which compliance mode was active.
 
 ### YAML Config
 
@@ -635,6 +655,9 @@ aigov-redact redact file.txt --ner
 | `ner_enabled` | `bool` | `False` | Enable Presidio NER detection |
 | `mask_char` | `str` | `"*"` | Character for mask mode |
 | `custom_placeholder` | `str` | `"{PII}"` | Placeholder for custom mode |
+| `history_path` | `str \| None` | `None` | Custom path for usage history log |
+| `file_path` | `str \| None` | `None` | Source file path (recorded in history) |
+| `source` | `str \| None` | `None` | Call source (`"library"`, `"cli"`, `"stdin"`) |
 
 **Returns**: `RedactResult` with fields:
 - `text: str` — redacted text
