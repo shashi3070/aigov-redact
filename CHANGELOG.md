@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.2 (2026-05-23)
+
+- Fixed history path still pointing to old `.prompt-sanitizer` folder instead of `.aigov-redact`
+
 ## v0.1.1 (2026-05-23)
 
 - Updated README with corrected project name references and normalized comment markers

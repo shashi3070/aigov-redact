@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 
 def _history_path() -> Path:
-    return Path.home() / ".prompt-sanitizer" / "history.jsonl"
+    return Path.home() / ".aigov-redact" / "history.jsonl"
 
 
 class UsageRecord(BaseModel):

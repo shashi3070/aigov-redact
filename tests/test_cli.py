@@ -132,7 +132,7 @@ class TestCLIHelp:
     def test_help(self):
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert "prompt-sanitizer" in result.stdout
+        assert "aigov-redact" in result.stdout
 
     def test_no_args(self):
         result = runner.invoke(app, [])

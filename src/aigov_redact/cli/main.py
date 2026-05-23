@@ -17,7 +17,7 @@ from aigov_redact.redactor import redact as redact_lib
 from aigov_redact.usage import get_history, get_history_summary
 
 app = typer.Typer(
-    name="prompt-sanitizer",
+    name="aigov-redact",
     help="PII Redactor for LLM Data — detect, redact, and audit sensitive data.",
     no_args_is_help=True,
 )
