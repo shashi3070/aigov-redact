@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.1.4 (2026-05-23)
+
+- History records now include `source` ("library"/"cli"/"stdin") and `file_path`
+- Added `source` and `file_path` params to `detect()`, `redact()`, `mask()` public API
+
 ## v0.1.3 (2026-05-23)
 
 - History written to both `~/.aigov-redact/history.jsonl` and `./.aigov-redact/history.jsonl`

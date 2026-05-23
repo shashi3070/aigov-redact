@@ -18,6 +18,8 @@ def detect(
     excluded_patterns: list[str] | None = None,
     ner_enabled: bool = False,
     history_path: str | None = None,
+    file_path: str | None = None,
+    source: str | None = None,
 ) -> DetectionResult:
     global _in_detect
     detector = create_detector(
@@ -43,6 +45,8 @@ def detect(
         record_usage(
             command="check",
             history_path=history_path,
+            source=source or "library",
+            file_path=file_path,
             entity_count=result.count,
             entity_types=[e.type for e in result.entities],
             ner_enabled=ner_enabled,
@@ -63,6 +67,8 @@ def redact(
     mask_char: str = "*",
     custom_placeholder: str = "{PII}",
     history_path: str | None = None,
+    file_path: str | None = None,
+    source: str | None = None,
 ) -> RedactResult:
     global _in_detect
     _in_detect = True
@@ -92,6 +98,8 @@ def redact(
     record_usage(
         command="redact",
         history_path=history_path,
+        source=source or "library",
+        file_path=file_path,
         entity_count=len(entities),
         entity_types=[e.type for e in entities],
         mode=mode,
@@ -109,6 +117,7 @@ def mask(
     custom_patterns: list[PIIDefinition] | None = None,
     excluded_patterns: list[str] | None = None,
     history_path: str | None = None,
+    file_path: str | None = None,
 ) -> RedactResult:
     return redact(
         text=text,
@@ -119,6 +128,7 @@ def mask(
         custom_patterns=custom_patterns,
         excluded_patterns=excluded_patterns,
         history_path=history_path,
+        file_path=file_path,
     )
 
 

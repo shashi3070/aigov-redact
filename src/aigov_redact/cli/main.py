@@ -88,14 +88,14 @@ def check(
 
     if stdin:
         text = _read_stdin()
-        result = detect_lib(text, ner_enabled=ner, history_path=history_path, **opts)
+        result = detect_lib(text, ner_enabled=ner, history_path=history_path, source="stdin", **opts)
     elif file:
         filepath = Path(file)
         if not filepath.exists():
             typer.echo(f"Error: file not found: {file}", err=True)
             raise typer.Exit(1)
         text = filepath.read_text("utf-8", errors="replace")
-        result = detect_lib(text, ner_enabled=ner, history_path=history_path, **opts)
+        result = detect_lib(text, ner_enabled=ner, history_path=history_path, file_path=str(filepath), **opts)
     else:
         typer.echo("Error: provide a file or use --stdin", err=True)
         raise typer.Exit(1)
@@ -165,6 +165,7 @@ def redact(
             mask_char=mask_char,
             placeholder_style=placeholder_style,
             history_path=history_path,
+            source="stdin",
             **opts,
         )
         if stdout:
@@ -190,6 +191,8 @@ def redact(
         mask_char=mask_char,
         placeholder_style=placeholder_style,
         history_path=history_path,
+        file_path=str(filepath),
+        source="cli",
         **opts,
     )
 
