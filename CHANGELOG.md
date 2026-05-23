@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.1 (2026-05-23)
+
+- Updated README with corrected project name references and normalized comment markers
+
 ## v0.1.0 (2026-05-23)
 
 - Renamed project to prompt-sanitizer
