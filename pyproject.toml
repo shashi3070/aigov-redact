@@ -4,19 +4,24 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aigov-redact"
-version = "0.1.5"
+version = "0.1.6"
 description = "PII Redactor for LLM Data — Library + CLI. Redact sensitive data before sending to LLM APIs."
 readme = "README.md"
+license-files = ["LICENSE"]
 requires-python = ">=3.9"
-license = { text = "MIT" }
-keywords = ["pii", "redaction", "privacy", "llm", "genai", "security", "data-privacy", "anonymization"]
+keywords = [
+    "pii", "redaction", "privacy", "llm", "genai", "security",
+    "data-privacy", "anonymization", "compliance", "gdpr",
+    "hipaa", "phi", "entity-recognition", "presidio",
+]
 authors = [
-    { name = "aigov-redact contributors" }
+    { name = "Shashi Kundan", email = "shashikundan0001@gmail.com" }
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
