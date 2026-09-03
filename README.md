@@ -1,6 +1,18 @@
 # aigov-redact — Privacy Gateway for LLMs and AI Agents
 
-**Reversible pseudonymization, policy engine, and enterprise data protection for AI/GenAI.** A lightweight, local-first Python library and CLI tool that protects sensitive data (PII, secrets, financial figures, business-critical entities) before it reaches LLM APIs — and restores it after. Built for compliance, auditability, and zero-trust data privacy.
+> **One-line pitch:** *Stop sending sensitive data to LLMs. Replace PII, secrets, and business-critical entities with reversible opaque tokens — then restore them from the model's response.*
+
+**aigov-redact** is a lightweight, local-first **privacy gateway** for AI/GenAI. It sits between your application and any LLM API (OpenAI, Claude, Gemini, self-hosted) as a policy-driven firewall: it detects sensitive data, protects it before it reaches the model, and restores it afterward — all reversible, auditable, and zero-trust.
+
+Think of it as one product with **two entry points**:
+
+| | Classic Redaction | Privacy Gateway (v0.2.0) |
+|---|---|---|
+| **Use case** | One-shot redaction before an API call | Reversible pseudonymization: `protect → LLM → resolve` |
+| **API** | `redact()`, `detect()`, `mask()` | `PrivacyGateway().protect()/resolve()` |
+| **Output** | `{PLACEHOLDER}` (non-reversible) | `<TYPE_8hex>` tokens you can map back |
+| **Policies** | Compliance profiles (HIPAA/PCI/GDPR) | `strict` / `enterprise` / `permissive` + custom rules |
+| **When** | Strip & forget | Protect, send, then restore originals |
 
 ```python
 from aigov_redact import PrivacyGateway
@@ -46,12 +58,14 @@ Data privacy is the #1 enterprise concern for LLM adoption. When you send prompt
 
 **aigov-redact** sits between your application and the LLM — a privacy firewall that strips PII before it reaches the API.
 
+- **Privacy Gateway** — `protect()` renders sensitive text safe for LLMs, `resolve()` restores it from the model's response. Reversible, end-to-end.
+- **Reversible pseudonymization** — Tokenize any entity (PII, customers, products, sales) with HMAC-based opaque tokens (`<TYPE_8hex>`), backed by a date-scoped, in-memory mapping vault.
+- **Policy engine** — Pre-built `strict` / `enterprise` / `permissive` policies, plus custom rules for entities, numbers, and dates. Numbers & dates are preserved by default; opt into scaling/shifting.
+- **Classic redaction** — One-shot `redact()` / `detect()` / `mask()` with 5 modes (replace, mask, hash, remove, custom) for "strip & forget" workflows.
+- **Comprehensive** — 55 built-in patterns across 4 confidence tiers with checksum validation (incl. Azure OpenAI, Claude, PASSWORD, API keys, secrets).
 - **Governance-ready** — Every redaction is auditable. Prove to regulators that PII never reached the LLM.
 - **Local-first** — No data leaves your machine. No API calls. No telemetry. Zero trust.
 - **Lightweight** — Pure Python. Zero heavy dependencies. <1ms per prompt.
-- **Reversible pseudonymization** — Tokenize entities with HMAC-based opaque tokens, then restore them from LLM output. Date-scoped, in-memory mapping vault.
-- **Policy engine** — Pre-built `strict` / `enterprise` / `permissive` policies, or define your own rules for any entity, number, or date.
-- **Comprehensive** — 55 built-in patterns across 4 confidence tiers with checksum validation (incl. Azure OpenAI, Claude, PASSWORD, secrets).
 - **Audit-ready** — Structured CSV audit logs for SOC 2 / GDPR / HIPAA / ISO 27001 compliance.
 
 ## Architecture
