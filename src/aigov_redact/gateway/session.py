@@ -39,7 +39,9 @@ class GatewaySession:
                 else:
                     token = replacement
                 if original_value in result:
-                    self._vault.register("ENTITY", original_value, {"token": token})
+                    self._vault.register(
+                        "ENTITY", original_value, {"token": token}, explicit_token=token
+                    )
                     result = result.replace(original_value, token)
 
         detection = self._gateway._detector.detect(result)

@@ -75,10 +75,14 @@ class MappingVault:
         entity_type: str,
         original_value: str,
         metadata: dict[str, Any] | None = None,
+        explicit_token: str | None = None,
     ) -> str:
         """Register an entity and return its token.
 
         If already registered (same date/type/value), returns existing token.
+        When ``explicit_token`` is provided, that token is used instead of a
+        generated one (e.g. for user-supplied manual replacement tokens), so
+        the mapping records token -> original value.
         """
         composite_key = self._make_composite_key(entity_type, original_value)
 
@@ -86,7 +90,7 @@ class MappingVault:
             if composite_key in self._reverse:
                 return self._reverse[composite_key]
 
-            token = self._generate_token(entity_type, original_value)
+            token = explicit_token or self._generate_token(entity_type, original_value)
 
             self._forward[token] = {
                 "type": entity_type,
