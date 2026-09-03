@@ -71,7 +71,7 @@ Data privacy is the #1 enterprise concern for LLM adoption. When you send prompt
 ## Architecture
 
 <p align="center">
-  <img src="docs/images/architecture.png" alt="aigov-redact Privacy Gateway architecture" width="90%">
+  <img src="https://raw.githubusercontent.com/shashi3070/aigov-redact/main/docs/images/architecture.png" alt="aigov-redact Privacy Gateway architecture" width="90%">
 </p>
 
 The gateway sits between your application and the LLM as a privacy firewall:
@@ -104,7 +104,7 @@ python -m spacy download en_core_web_sm
 The centerpiece of v0.2.0. Wrap LLM calls with reversible pseudonymization:
 
 <p align="center">
-  <img src="docs/images/flow_working.png" alt="Privacy Gateway protect → LLM → resolve flow" width="85%">
+  <img src="https://raw.githubusercontent.com/shashi3070/aigov-redact/main/docs/images/flow_working.png" alt="Privacy Gateway protect → LLM → resolve flow" width="85%">
 </p>
 
 ```python

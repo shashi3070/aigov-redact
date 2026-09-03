@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.1
+
+- Fix: README architecture/flow diagrams now use absolute GitHub URLs so they render on the PyPI landing page (relative paths were broken).
+
 ## v0.2.0
 
 **Breaking: none.** All existing public APIs remain backward compatible.
