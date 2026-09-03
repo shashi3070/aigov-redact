@@ -588,6 +588,16 @@ PATTERNS: list[PIIDefinition] = [
             r"|1000\.[a-zA-Z0-9]{30,}\.[a-zA-Z0-9]{30,}"
             r"|ED[A-Za-z0-9]{50,}"
             r"|v1[A-Za-z0-9]{50,}"
+            r"|sk-ant-api03-[a-zA-Z0-9_-]{20,}"
+            r"|co-[a-zA-Z0-9]{40,}"
+            r"|hf_[a-zA-Z0-9]{30,}"
+            r"|r8_[a-zA-Z0-9]{40,}"
+            r"|gsk_[a-zA-Z0-9]{40,}"
+            r"|fw_[a-zA-Z0-9]{40,}"
+            r"|pplx-[a-zA-Z0-9]{40,}"
+            r"|AKIA[0-9A-Z]{16}"
+            r"|ASIA[0-9A-Z]{16}"
+            r"|(?:A3T[A-Z0-9]|ABIA|ACCA|ACCB|AKIA|ANPA|ANVA|AROA|AIDA|AIPA|ANCA|ASIA)[A-Z0-9]{16}"
             r")\b"
         ),
         confidence=0.95,
@@ -811,6 +821,76 @@ PATTERNS: list[PIIDefinition] = [
         severity="medium",
         placeholder="{HEX_TOKEN}",
         tier=4,
+    ),
+
+    # ── TIER 1-2: Secrets & credentials (new additions) ──────────────────
+    PIIDefinition(
+        name="AZURE_OPENAI_KEY",
+        description="Azure OpenAI API key (UUID near Azure/OpenAI keywords)",
+        regex=re.compile(
+            r"(?:azure[_\-]?open[_\-]?ai|AZURE_OPENAI)[_\-]?"
+            r"(?:api[_\-]?key|secret|token|credential)"
+            r"[\s:=\"]+"
+            r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}",
+            re.IGNORECASE,
+        ),
+        confidence=0.92,
+        severity="critical",
+        placeholder="{AZURE_OPENAI_KEY}",
+        tier=1,
+    ),
+    PIIDefinition(
+        name="PASSWORD",
+        description="Password in KEY=VALUE or KEY:VALUE format",
+        regex=re.compile(
+            r"(?:password|passwd|pwd|pass|secret|credential)"
+            r"[\s:=]+"
+            r"[^\s\"';\n,]{3,64}",
+            re.IGNORECASE,
+        ),
+        confidence=0.88,
+        severity="critical",
+        placeholder="{PASSWORD}",
+        tier=1,
+    ),
+    PIIDefinition(
+        name="PASSWORD_JSON",
+        description="Password in JSON key-value format",
+        regex=re.compile(
+            r'"(?:password|passwd|pwd|pass|secret|credential)"'
+            r"\s*:\s*"
+            r'"[^"]{4,128}"',
+            re.IGNORECASE,
+        ),
+        confidence=0.92,
+        severity="critical",
+        placeholder="{PASSWORD}",
+        tier=1,
+    ),
+    PIIDefinition(
+        name="HTTP_BASIC_AUTH",
+        description="HTTP Basic Auth credentials embedded in URL",
+        regex=re.compile(
+            r"(?:https?|ftp)://[^:]+:[^\s@]{4,}@[^/\s]+",
+        ),
+        confidence=0.95,
+        severity="critical",
+        placeholder="{CREDENTIALS}",
+        tier=1,
+    ),
+    PIIDefinition(
+        name="ENV_SECRET_VALUE",
+        description="Secret value in environment variable or config file format",
+        regex=re.compile(
+            r"(?:SECRET|PASSWORD|API_KEY|ACCESS_KEY|PRIVATE_KEY|TOKEN|AUTH_KEY)"
+            r"[\s=:]+"
+            r"[^\s\"';\n]{8,}",
+            re.IGNORECASE,
+        ),
+        confidence=0.85,
+        severity="critical",
+        placeholder="{SECRET}",
+        tier=2,
     ),
 ]
 

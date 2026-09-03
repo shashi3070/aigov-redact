@@ -6,7 +6,6 @@ from typing import Any
 
 from pydantic import BaseModel
 
-
 _HOME_PATH = Path.home() / ".aigov-redact" / "history.jsonl"
 _CWD_PATH = Path.cwd() / ".aigov-redact" / "history.jsonl"
 

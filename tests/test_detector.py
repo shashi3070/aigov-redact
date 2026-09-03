@@ -87,4 +87,4 @@ class TestCreateDetector:
     def test_create_detector(self):
         d = create_detector()
         assert isinstance(d, Detector)
-        assert len(d.definitions) == 50
+        assert len(d.definitions) == 55

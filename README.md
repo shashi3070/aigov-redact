@@ -1,31 +1,26 @@
-# aigov-redact — PII Redactor for LLM Data
+# aigov-redact — Privacy Gateway for LLMs and AI Agents
 
-**Governance-ready PII redaction for AI/GenAI.** A lightweight, local-first Python library and CLI tool for detecting, redacting, and auditing personally identifiable information (PII) before it reaches LLM APIs. Built for compliance, auditability, and zero-trust data privacy.
+**Reversible pseudonymization, policy engine, and enterprise data protection for AI/GenAI.** A lightweight, local-first Python library and CLI tool that protects sensitive data (PII, secrets, financial figures, business-critical entities) before it reaches LLM APIs — and restores it after. Built for compliance, auditability, and zero-trust data privacy.
 
 ```python
-from aigov_redact import redact, detect  # ← aigov-redact
+from aigov_redact import PrivacyGateway
 
-# ── Before every LLM API call: redact, then prove it to auditors ────
-prompt = f"""
-User context: My name is John Doe, email john@gmail.com, SSN 123-45-6789
-Question: What benefits am I eligible for?
-"""
+# ── Reversible Privacy Gateway: protect → LLM → resolve ────────────
+gateway = PrivacyGateway(policy="enterprise")
 
-# 1. Check what would be exposed
-result = detect(prompt)  # ← aigov-redact
-for e in result.entities:
-    print(f"  {e.type} at [{e.start}:{e.end}] (confidence: {e.confidence:.2f})")
-# → EMAIL at [45:57] (confidence: 0.95)
-# → SSN at [63:74] (confidence: 0.98)
+session = gateway.protect(
+    "Reliance Industries sold Product-X to Tata for ₹48.5 Cr"
+)
+print(session.text)
+# → "<ENTITY_a7f2b1c3> sold <ENTITY_9e1d4f08> to <ENTITY_2c8a7b5e> for ₹48.5 Cr"
+#    (PII/entities tokenized; numbers & dates preserved by default)
 
-# 2. Redact before sending to OpenAI / Claude / Gemini
-safe = redact(prompt, mode="replace")  # ← aigov-redact
-print(safe.text)
-# → "User context: My name is {EMAIL}, email {EMAIL}, SSN {SSN}
-#     Question: What benefits am I eligible for?"
+# Safe to send to OpenAI / Claude / Gemini:
+# response = client.chat.completions.create(messages=[{"role":"user","content":session.text}])
 
-# 3. Log to audit trail for SOC 2 / GDPR / HIPAA compliance
-#    (run: aigov-redact audit requests.log --audit-log pii-leaks.csv)
+# Restore original values from LLM output
+print(session.resolve("The price of <ENTITY_a7f2b1c3> is strong."))
+# → "The price of Reliance Industries is strong."
 ```
 
 ```bash
@@ -34,6 +29,8 @@ aigov-redact redact prompt.txt              # redact before API call
 aigov-redact audit requests.log             # scan LLM API logs for PII leaks
 aigov-redact audit requests.log --audit-log pii-leaks.csv  # persistent audit trail
 ```
+
+---
 
 ## Why aigov-redact for LLM Workflows?
 
@@ -52,8 +49,26 @@ Data privacy is the #1 enterprise concern for LLM adoption. When you send prompt
 - **Governance-ready** — Every redaction is auditable. Prove to regulators that PII never reached the LLM.
 - **Local-first** — No data leaves your machine. No API calls. No telemetry. Zero trust.
 - **Lightweight** — Pure Python. Zero heavy dependencies. <1ms per prompt.
-- **Comprehensive** — 50 built-in PII patterns across 4 confidence tiers with checksum validation.
+- **Reversible pseudonymization** — Tokenize entities with HMAC-based opaque tokens, then restore them from LLM output. Date-scoped, in-memory mapping vault.
+- **Policy engine** — Pre-built `strict` / `enterprise` / `permissive` policies, or define your own rules for any entity, number, or date.
+- **Comprehensive** — 55 built-in patterns across 4 confidence tiers with checksum validation (incl. Azure OpenAI, Claude, PASSWORD, secrets).
 - **Audit-ready** — Structured CSV audit logs for SOC 2 / GDPR / HIPAA / ISO 27001 compliance.
+
+## Architecture
+
+<p align="center">
+  <img src="docs/images/architecture.png" alt="aigov-redact Privacy Gateway architecture" width="90%">
+</p>
+
+The gateway sits between your application and the LLM as a privacy firewall:
+
+- **Policy Engine** decides what to do with each detected entity (tokenize, block, preserve, mask, ...)
+- **Detector** finds PII, secrets, and custom entities across 55 patterns (plus optional NER)
+- **Reversible Tokenizer** replaces values with opaque, HMAC-based tokens
+- **Mapping Vault** keeps the token↔original mapping in memory (date-scoped, never persisted)
+- **Audit Log** records what was protected for compliance
+
+Numbers and dates are preserved by default; scaling/shifting is opt-in via policy rules.
 
 ## Quick Start
 
@@ -69,6 +84,37 @@ With optional NER support (names, locations, organizations):
 pip install aigov-redact[ner]
 python -m spacy download en_core_web_sm
 ```
+
+### Privacy Gateway — Protect → LLM → Resolve
+
+The centerpiece of v0.2.0. Wrap LLM calls with reversible pseudonymization:
+
+<p align="center">
+  <img src="docs/images/flow_working.png" alt="Privacy Gateway protect → LLM → resolve flow" width="85%">
+</p>
+
+```python
+from aigov_redact import PrivacyGateway
+
+gateway = PrivacyGateway(policy="enterprise")
+
+# Protect before the LLM call
+session = gateway.protect(
+    "John (john@acme.com) of Reliance Industries quoted ₹48.5 Cr for Product-X"
+)
+print(session.text)
+# → "<EMAIL_a7f2b1c3> (<EMAIL_a7f2b1c3>) of <ENTITY_9e1d4f08> quoted ₹48.5 Cr for <ENTITY_2c8a7b5e>"
+
+# Send session.text to the LLM, then restore the response
+llm_output = "The price of <ENTITY_9e1d4f08> is competitive."
+print(session.resolve(llm_output))
+# → "The price of Reliance Industries is competitive."
+```
+
+**What's protected by default:**
+- PII entities (email, SSN, phone, cards, DOB, ...) → tokenized
+- Secrets & API keys → blocked (raise an error) or tokenized
+- Numbers & dates → **preserved by default** (turn on scaling/shifting explicitly)
 
 ### Python Library — LLM-First Examples
 
@@ -351,7 +397,7 @@ with open("training_data.jsonl") as f, open("safe_training_data.jsonl", "w") as 
         out.write(json.dumps(record) + "\n")
 ```
 
-## Supported PII Types (50 patterns)
+## Supported PII Types (55 patterns)
 
 ### Tier 1 — High Confidence (checksum/rigorous validation)
 
@@ -665,6 +711,118 @@ aigov-redact redact file.txt --ner
 
 > **Note**: NER requires a spaCy model (~50 MB). Performance is 50-200ms vs <1ms for regex-only.
 
+## Privacy Gateway API (v0.2.0)
+
+### `PrivacyGateway(policy=..., reversible=..., replacements=...)`
+
+The main entry point for reversible pseudonymization and enterprise data protection.
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `policy` | `Policy \| str` | `"default"` | Pre-built policy name (`"strict"`, `"enterprise"`, `"permissive"`, `"default"`) or a custom `Policy` object |
+| `reversible` | `bool \| None` | `None` | When `True`, generate reversible tokens. Defaults to the policy's `reversible` setting |
+| `replacements` | `dict \| str \| None` | `None` | Manual entity→token mapping (dict), YAML file path, or list of dicts. When `None`, tokens are auto-generated via HMAC |
+| `patterns` | `str \| list[dict] \| None` | `None` | YAML file path or inline list of custom pattern definitions |
+| `enabled_types` | `list[str] \| None` | `None` | Only detect these PII types |
+| `disabled_types` | `list[str] \| None` | `None` | Skip these PII types |
+| `custom_patterns` | `list[PIIDefinition] \| None` | `None` | Additional custom PII patterns |
+| `excluded_patterns` | `list[str] \| None` | `None` | Regex patterns to exclude |
+
+**`gateway.protect(text, task=None)` → `GatewaySession`**
+
+| Attribute / Method | Description |
+|---|---|
+| `.text` | The protected text, safe for LLM consumption |
+| `.original` | The original unprotected text |
+| `.mapping` | `dict[token → original_value]` |
+| `.resolve(llm_output)` | Restore original values in LLM output (including reversed numbers/dates) |
+| `.resolve_json(dict)` | Restore original values in a JSON response |
+
+**Token formats:**
+- Auto-generated (HMAC, deterministic within UTC date): `<TYPE_8hex>` e.g. `<EMAIL_a7f2b1c3>`
+- Custom entities: `<ENTITY_8hex>`
+- Manual: whatever you provide (e.g. `<CUSTOMER_A>`)
+
+### Policies
+
+Pre-built policies, all customizable:
+
+- **`strict`** — Tokenize PII, block secrets (API keys, passwords, private keys, JWTs). Reversible tokens.
+- **`enterprise`** — Tokenize PII, block secrets, semantic abstraction metadata. Balanced privacy level. Reversible.
+- **`permissive`** — Only block secrets; preserve everything else. Non-reversible.
+- **`default`** — Redact all entity types with reversible tokens (when `reversible=True`).
+
+Numbers and dates are **preserved by default** in all policies. To enable number scaling or date shifting, add explicit rules:
+
+```python
+from aigov_redact import Policy, EntityRule, NumberRule, DateRule, Action
+
+policy = Policy(
+    entity_rules={
+        "EMAIL": EntityRule(entity_type="EMAIL", action=Action.REDACT),
+    },
+    number_rules={
+        "currency": NumberRule(numeric_type="currency", action=Action.SCALE,
+                               mode="scale", factor=1.5),
+    },
+    date_rule=DateRule(action=Action.SCALE, mode="shift", shift_days=173),
+)
+gateway = PrivacyGateway(policy=policy)
+```
+
+### Custom Entity Definitions
+
+Define your own sensitive entities via `replacements` (dict, YAML, or list):
+
+```python
+# Manual tokens
+gateway = PrivacyGateway(replacements={
+    "Reliance Industries": "<CUSTOMER_A>",
+    "Tata Consultancy": "<CUSTOMER_B>",
+})
+
+# Semantic metadata (enterprise data protection)
+gateway = PrivacyGateway(replacements={
+    "Reliance Industries": {
+        "token": "<CUST_REL>",
+        "semantic": {"industry": "Conglomerate", "region": "India"},
+    }
+})
+```
+
+### Mapping Vault
+
+The `MappingVault` stores entity→token mappings **in memory only** — never to disk or logs — with automatic scope.
+
+```python
+from aigov_redact import MappingVault
+
+vault = MappingVault()                    # date-scoped (default): same entity, same UTC date = same token
+vault = MappingVault(scope="session")     # session-scoped: each vault gets unique tokens
+vault = MappingVault(ttl=3600)            # expire mappings after 1 hour
+
+token = vault.register("EMAIL", "john@example.com")  # → <EMAIL_a7f2b1c3>
+vault.resolve(token)                                 # → "john@example.com"
+```
+
+### Number & Date Transformation
+
+Transformers for analytical data protection, reversible when a vault is supplied.
+
+```python
+from aigov_redact import NumberTransformer, DateTransformer, MappingVault
+
+vault = MappingVault()
+nums = NumberTransformer(vault)
+dates = DateTransformer(vault)
+
+safe_num = nums.scale("₹48.5 Cr", 1.37)     # → "₹66.44 Cr"
+nums.reverse(safe_num)                       # → "₹48.5 Cr"
+
+safe_date = dates.shift("DOB: 1990-01-15", 173)
+dates.reverse(safe_date)                     # → "DOB: 1990-01-15"
+```
+
 ## API Reference
 
 ### `redact(text, ...)` → `RedactResult`
@@ -688,6 +846,9 @@ aigov-redact redact file.txt --ner
 - `text: str` — redacted text
 - `entities: list[PIIEntity]` — detected entities
 - `mode: str` — redaction mode used
+- `mapping: dict[str, str] | None` — token → original value (populated in reversible mode)
+- `risk_score: float | None` — optional risk score
+- `risk_details: dict | None` — optional risk breakdown
 
 ### `detect(text, ...)` → `DetectionResult`
 
@@ -713,6 +874,25 @@ Shortcut for `redact(text, mode="mask", mask_char=char, ...)`.
 | `end` | `int` | End position in text |
 | `confidence` | `float` | Detection confidence (0-1) |
 | `severity` | `str` | `"low"`, `"medium"`, `"high"`, or `"critical"` |
+
+#### `Policy`
+| Field | Type | Description |
+|---|---|---|
+| `name` | `str` | Policy name |
+| `entity_rules` | `dict[str, EntityRule]` | Per-entity-type actions |
+| `number_rules` | `dict[str, NumberRule]` | Numeric transformations (off by default) |
+| `date_rule` | `DateRule \| None` | Date transformation (off by default) |
+| `failure_mode` | `str` | `"fail_open"` or `"fail_closed"` |
+| `reversible` | `bool` | Whether tokens are reversible |
+| `privacy_level` | `str` | `"strict"`, `"balanced"`, or `"analytical"` |
+
+#### `Action` enum
+`allow`, `redact`, `tokenize`, `mask`, `hash`, `remove`, `block`, `preserve`, `abstract`, `scale`, `audit`
+
+#### `EntityRule`, `NumberRule`, `DateRule`
+- `EntityRule(entity_type, action, abstract_fields=None, replacement_token=None)`
+- `NumberRule(numeric_type, action, mode="preserve" | "scale" | "range", factor=None, ...)`
+- `DateRule(action, mode="preserve" | "shift", shift_days=None)`
 
 ## Use Cases — LLM & GenAI Focus
 

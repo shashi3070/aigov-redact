@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import Any
 
 from pydantic import BaseModel, Field, computed_field
 
@@ -19,6 +20,9 @@ class RedactResult(BaseModel):
     text: str
     entities: list[PIIEntity]
     mode: str = "replace"
+    mapping: dict[str, str] | None = None
+    risk_score: float | None = None
+    risk_details: dict[str, Any] | None = None
 
 
 class DetectionResult(BaseModel):

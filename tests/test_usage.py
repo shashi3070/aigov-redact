@@ -5,7 +5,7 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 from aigov_redact.cli.main import app
-from aigov_redact.usage import _HOME_PATH, _CWD_PATH, get_history, get_history_summary, record_usage
+from aigov_redact.usage import get_history, get_history_summary, record_usage
 
 runner = CliRunner()
 

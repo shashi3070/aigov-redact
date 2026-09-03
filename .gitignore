@@ -10,4 +10,8 @@ build/
 .env
 *.egg
 *.bak
+*.audit.csv
 aigov-redact-audit.log
+
+# Runtime usage/history artifacts (never committed)
+.aigov-redact/

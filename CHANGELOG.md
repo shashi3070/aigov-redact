@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.2.0
+
+**Breaking: none.** All existing public APIs remain backward compatible.
+
+### New — Privacy Gateway for LLMs and AI Agents
+- `PrivacyGateway` + `GatewaySession` for reversible protect → LLM → resolve workflows
+- `MappingVault` — date-scoped, in-memory, thread-safe entity→token store
+- `TokenGenerator` — HMAC-based deterministic opaque tokens (`<TYPE_8hex>`)
+- `MappingSession` — lifecycle binding of vault + generator
+
+### New — Policy Engine
+- `Policy`, `Action`, `EntityRule`, `NumberRule`, `DateRule`
+- Pre-built policies: `strict`, `enterprise`, `permissive`
+- Numbers and dates preserved by default; scaling/shifting opt-in
+
+### New — Transformations
+- `NumberTransformer` — scale, range, percentile (reversible)
+- `DateTransformer` — date shifting (reversible)
+- `SemanticAbstracter` — semantic abstraction with user-provided metadata
+
+### New — Secret Patterns
+- Added `AZURE_OPENAI_KEY`, `PASSWORD`, `PASSWORD_JSON`, `HTTP_BASIC_AUTH`, `ENV_SECRET_VALUE`
+- Extended `API_KEY` with Claude (`sk-ant-api03-`), Cohere, Hugging Face, Replicate, Groq, Fireworks, Perplexity, AWS STS prefixes
+- Total patterns: 50 → 55
+
+### Extended
+- `RedactResult` now has optional `mapping`, `risk_score`, `risk_details` fields
+
 ## v0.1.4 (2026-05-23)
 
 - History records now include `source` ("library"/"cli"/"stdin") and `file_path`

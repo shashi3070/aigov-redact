@@ -6,8 +6,8 @@ from aigov_redact.patterns import PATTERNS, PATTERNS_BY_NAME
 
 
 class TestPatternsCount:
-    def test_50_patterns(self):
-        assert len(PATTERNS) == 50
+    def test_55_patterns(self):
+        assert len(PATTERNS) == 55
 
     def test_all_have_names(self):
         for p in PATTERNS:
@@ -287,11 +287,11 @@ class TestHashicorpTfToken:
 class TestTierClassification:
     def test_tier_1_count(self):
         tier1 = [p for p in PATTERNS if p.tier == 1]
-        assert len(tier1) == 12, f"Expected 12 Tier 1 patterns, got {len(tier1)}"
+        assert len(tier1) == 16, f"Expected 16 Tier 1 patterns, got {len(tier1)}"
 
     def test_tier_2_count(self):
         tier2 = [p for p in PATTERNS if p.tier == 2]
-        assert len(tier2) == 12, f"Expected 12 Tier 2 patterns, got {len(tier2)}"
+        assert len(tier2) == 13, f"Expected 13 Tier 2 patterns, got {len(tier2)}"
 
     def test_tier_3_count(self):
         tier3 = [p for p in PATTERNS if p.tier == 3]

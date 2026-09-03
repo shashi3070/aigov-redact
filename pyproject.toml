@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aigov-redact"
-version = "0.1.6"
-description = "PII Redactor for LLM Data — Library + CLI. Redact sensitive data before sending to LLM APIs."
+version = "0.2.0"
+description = "Privacy Gateway for LLMs and AI Agents — reversible pseudonymization, policy engine, and data protection."
 readme = "README.md"
 license-files = ["LICENSE"]
 requires-python = ">=3.9"

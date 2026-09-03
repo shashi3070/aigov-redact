@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 
 from aigov_redact.detector import Detector, create_detector
+from aigov_redact.mapping.vault import MappingVault
 from aigov_redact.models import DetectionResult, PIIEntity, RedactResult
 from aigov_redact.patterns import PIIDefinition
 from aigov_redact.usage import record_usage
@@ -66,6 +67,8 @@ def redact(
     placeholder_style: str = "type",
     mask_char: str = "*",
     custom_placeholder: str = "{PII}",
+    mapping: MappingVault | None = None,
+    reversible: bool = False,
     history_path: str | None = None,
     file_path: str | None = None,
     source: str | None = None,
@@ -84,7 +87,13 @@ def redact(
 
     entities = detection.entities
 
-    if mode == "remove":
+    result: str
+    token_map: dict[str, str] | None = None
+
+    if reversible and mode in ("replace", "hash"):
+        result, token_map = _apply_reversible(text, entities, mapping)
+        mode = "reversible"
+    elif mode == "remove":
         result = _apply_remove(text, entities)
     elif mode == "mask":
         result = _apply_mask(text, entities, mask_char)
@@ -106,7 +115,7 @@ def redact(
         ner_enabled=ner_enabled,
     )
 
-    return RedactResult(text=result, entities=entities, mode=mode)
+    return RedactResult(text=result, entities=entities, mode=mode, mapping=token_map)
 
 
 def mask(
@@ -175,3 +184,18 @@ def _apply_custom(text: str, entities: list[PIIEntity], placeholder: str) -> str
     for ent in sorted(entities, key=lambda e: e.start, reverse=True):
         result[ent.start:ent.end] = placeholder
     return "".join(result)
+
+
+def _apply_reversible(
+    text: str,
+    entities: list[PIIEntity],
+    mapping: MappingVault | None,
+) -> tuple[str, dict[str, str]]:
+    vault = mapping or MappingVault()
+    result = list(text)
+    token_map: dict[str, str] = {}
+    for ent in sorted(entities, key=lambda e: e.start, reverse=True):
+        token = vault.register(ent.type, ent.text)
+        token_map[token] = ent.text
+        result[ent.start:ent.end] = token
+    return "".join(result), token_map

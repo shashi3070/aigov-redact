@@ -129,6 +129,39 @@ def parse_custom_patterns(config: dict[str, Any]) -> list[PIIDefinition]:
     return patterns
 
 
+def load_replacements(config: dict[str, Any]) -> dict[str, Any] | None:
+    """Load the `replacements` config entry.
+
+    Supports an inline mapping, or a file path (YAML/JSON) pointing to one.
+    """
+    replacements = config.get("replacements")
+    if replacements is None:
+        return None
+    if isinstance(replacements, str):
+        path = Path(replacements)
+        if path.exists():
+            raw = path.read_text("utf-8").strip()
+            if path.suffix in (".yaml", ".yml"):
+                try:
+                    import yaml
+                    return yaml.safe_load(raw) or {}
+                except ImportError:
+                    raise ImportError(
+                        "PyYAML is required to load .yaml replacements. "
+                        "Run: pip install aigov-redact[yaml]"
+                    )
+            return json.loads(raw)
+        raise ValueError(f"Replacements file not found: {replacements}")
+    if isinstance(replacements, dict):
+        return replacements
+    raise ValueError("`replacements` must be a dict or a file path")
+
+
+def get_policy_name(config: dict[str, Any]) -> str | None:
+    """Return the configured policy name (if any)."""
+    return config.get("policy")
+
+
 def merge_config_with_cli(config: dict[str, Any], cli_args: dict[str, Any]) -> dict[str, Any]:
     merged = dict(config)
     for key, value in cli_args.items():
